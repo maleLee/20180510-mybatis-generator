@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+
+
+	<!--
+
+		整个逆向工程的配置文件中
+			1.实体类，mapper接口的包名
+			2.mapper配置文件的文件夹位置
+			3.表的配置
+				tableName
+				domainObjectName
+				generateKey也需要更改
+			4.application.properties属性文件
+
+	-->
+
+
+	<!--
+		1.引入属性文件:配置数据库连接信息
+	-->
+	<properties resource="application.properties" />
+
+	<!--
+		2.需要指定逆向工程的数据库类型
+			如果连接的数据库为mysql===》mysql即可
+							  oracle===》oracle
+	-->
+	<context id="mysql" targetRuntime="MyBatis3Simple">
+
+		<!-- 使用mybatis的通用mapper插件  -->
+		<!--<plugin type="${mapper.plugin}">
+			<property name="mappers" value="${mapper.Mapper}" />
+		</plugin>-->
+
+		<!--
+			3.suppressAllComments
+				镇压(阻止) 所有 评论===》覆盖
+				如果说在逆向工程中已经生成过了一些实体类，mapper接口和mapper.xml文件
+				现在需要重新生成新的文件，直接发生覆盖
+			不允许这么操作
+			!!!!!!!!!所有的逆向工程在生成新的文件之前，都必须强制要把以前生成过的文件手动删除，否则会报异常
+				逆向工程不会报异常，会直接覆盖
+				但是把这些文件复制到实际开发项目中后，导致项目无法运行和启动，直接报错！
+		-->
+		<commentGenerator>
+			<property name="suppressAllComments" value="true" />
+		</commentGenerator>
+
+		<!--
+			4.配置数据源，也就是说连接mysql数据库
+				如果前面已经配置了连接是数据库是mysql，在这只能连接mysql,如果配置的是oracle，该工程不会报错，但是也无法识别
+		-->
+		<jdbcConnection driverClass="${jdbc.driverClassName}"
+			connectionURL="${jdbc.url}" userId="${jdbc.username}" password="${jdbc.password}">
+		</jdbcConnection>
+
+		<!--
+			BigDdecimal:在java类型中是整数型(比int，long都要长)
+			在java类型中一般不会出现，原因可能导致存入数据库的时候，长度越界
+				eg:
+					private BigDecimal id;
+					id = 374632876423749825264872638758387974326487;
+					把id存入数据库中(bigint)，也会报错
+					除非在oracle数据库中配置BigDecimal
+			5.禁用逆向工程生成出的整数类型为BigDecimal类型
+
+		-->
+		<javaTypeResolver>
+			<property name="forceBigDecimals" value="false" />
+		</javaTypeResolver>
+
+		<!--
+			6.生成实体类
+			javaModelGenerator:生成实体类的配置
+				targetPackage:把生成的实体类放置到目标包路径
+			targetProject:
+				java:编写java代码
+				resources:编写配置文件
+				把生成的实体类以及包放置java资源文件夹中
+			enableSubPackages:禁用掉子包，也就是说生成出的所有实体类都必须要一个包下，不允许分多个包
+				逆向工程不允许这么生成实体类:
+				com.zzsxt.lee.model:
+					User
+					com.zzsxt.lee.model.admin:
+						Admin
+			trimStrings:把字符串的空格去掉
+		-->
+		<javaModelGenerator targetPackage="com.aaa.lee.springcloud.model"
+			targetProject="./src/main/java">
+			<property name="enableSubPackages" value="false" />
+			<property name="trimStrings" value="true" />
+		</javaModelGenerator>
+
+		<!--
+			7.生成mapper.xml配置文件
+				targetProject:因为mapper.xml是配置文件，所以需要放在resources资源文件夹中
+		-->
+		<sqlMapGenerator targetPackage="mapper" targetProject="./src/main/resources">
+			<property name="enableSubPackages" value="false" />
+		</sqlMapGenerator>
+
+		<!--
+			8.生成mapper接口
+
+		-->
+		<javaClientGenerator type="XMLMAPPER"
+			targetPackage="com.aaa.lee.springcloud.mapper" targetProject="./src/main/java">
+			<property name="enableSubPackages" value="false" />
+		</javaClientGenerator>
+
+		<!--
+			!!!!!!!9.需要手动编写
+				table:数据库中的表
+					tableName:数据库中表名
+					domainObjectName:数据库中表名所对应的实体类的名字
+				generatedKey:不是必须要配置的，但是大多数表还是需要配置
+					自增id
+				如果数据库中表的id并没有设置自增，该配置就不需要
+				如果设置了自增，就需要配置
+				column:自增的列名
+				sqlStatement:数据库的类型
+					eg:
+						mysql中整数类型可以直接自增
+						oracle中并不是，如果在oracle中需要实现自增，需要配置自增序列(Sequences)
+						identity:是否为主键
+		-->
+		<table tableName="user" domainObjectName="User">
+			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
+		</table>
+	</context>
+</generatorConfiguration>
